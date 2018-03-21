@@ -72,6 +72,7 @@ private[simpleakkadowning] class DowningActor(stableInterval: FiniteDuration, de
 
     case SplitBrainDetected(clusterState) if decider.isInMinority(clusterState, cluster.selfAddress) =>
 //      println ("########################### " + clusterState.upMembers + " |||||||||||||||||||| " + clusterState.unreachable + " >>>>>>>>>>>>>>>>>>> " + clusterState.upUnreachable)
+    	log.debug("Cluster state: {}", clusterState)
       log.error("Network partition detected. I am not in the surviving partition --> terminating")
       context.system.terminate()
       context.become(Actor.emptyBehavior)
