@@ -50,21 +50,26 @@ private[simpleakkadowning] class DowningActor(stableInterval: FiniteDuration, de
   override def receive = {
     // cluster.state may or may not reflect the changes during event handling, so we need to keep track of cluster state ourselves
 
-    case CurrentClusterState(members, unreachable, _, _, _) =>
+    case msg @ CurrentClusterState(members, unreachable, _, _, _) =>
+    	log.debug("State: {} - Msg: {}", state, msg)
       val upMembers = members.filter(_.status == MemberStatus.Up).map(m => ClusterMemberInfo(m.uniqueAddress, m.roles, m))
       state = ClusterState(upMembers, unreachable.map(_.uniqueAddress))
       triggerTimer()
-    case MemberUp(m) =>
+    case msg @ MemberUp(m) =>
+    	log.debug("State: {} - Msg: {}", state, msg)
       //TODO is there a good and meaningful way to count 'weaklyUp' members?
       state = state.copy(upMembers = state.upMembers + ClusterMemberInfo(m.uniqueAddress, m.roles, m))
       triggerTimer()
-    case MemberLeft(m) =>
+    case msg @ MemberLeft(m) =>
+    	log.debug("State: {} - Msg: {}", state, msg)
       state = state.copy(upMembers = state.upMembers.filterNot (_.uniqueAddress == m.uniqueAddress))
       triggerTimer()
-    case ReachableMember(m) =>
+    case msg @ ReachableMember(m) =>
+    	log.debug("State: {} - Msg: {}", state, msg)
       state = state.copy (unreachable =  state.unreachable - m.uniqueAddress)
       triggerTimer()
-    case UnreachableMember(m) =>
+    case msg @ UnreachableMember(m) =>
+    	log.debug("State: {} - Msg: {}", state, msg)
 //      println ("******* UNREACHABLE: " + m.uniqueAddress.address.port)
 
       state = state.copy (unreachable = state.unreachable + m.uniqueAddress)
