@@ -42,9 +42,15 @@ private[simpleakkadowning] class DowningActor(stableInterval: FiniteDuration, de
 	private var state: ClusterState = _
 
 	private val cluster = Cluster.get(context.system)
-	cluster.subscribe(self, classOf[ClusterDomainEvent])
 
 	private var unreachableTimer = Option.empty[Cancellable]
+
+	override def preStart() {
+		super.preStart()
+
+		log.info("Subscribing to cluster events")
+		cluster.subscribe(self, classOf[ClusterDomainEvent])
+	}
 
 	override def receive = {
 		// cluster.state may or may not reflect the changes during event handling, so we need to keep track of cluster state ourselves
